@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Lost Gems</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1d1d27;
+      color: #333;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #eae9ec;
+      padding: 100px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #1DB954;
+    }
+    .album {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .album img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-right: 20px;
+    }
+    .album-info {
+      text-align: left;
+      flex-grow: 1;
+    }
+    .album-info h2 {
+      margin: 0;
+      font-size: 1.2em;
+    }
+    .album-info p {
+      margin: 5px 0;
+    }
+    .login-btn, .remove-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #1DB954;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 1em;
+      transition: background-color 0.3s;
+      cursor: pointer;
+    }
+    .login-btn:hover, .remove-btn:hover {
+      background-color: #17a744;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Spotify Lost Gems</h1>
+    <p>Click the button below to log in and rediscover albums in your library that you haven't listened to recently.</p>
+    <a href="/login" class="login-btn">Log in with Spotify</a>
+    <div id="results"></div>
+  </div>
+  <script>
+    async function fetchData() {
+      const response = await fetch('/callback');
+      const data = await response.json();
+      displayResults(data.lostGems);
+    }
+
+    function displayResults(albums) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+      albums.forEach(album => {
+        const albumDiv = document.createElement('div');
+        albumDiv.className = 'album';
+        albumDiv.innerHTML = `
+          <img src="${album.album.images[0].url}" alt="${album.album.name}">
+          <div class="album-info">
+            <h2>${album.album.name}</h2>
+            <p>by ${album.album.artists.map(artist => artist.name).join(', ')}</p>
+            <p>Saved at: ${new Date(album.added_at).toLocaleDateString()}</p>
+          </div>
+          <button class="remove-btn" onclick="removeAlbum('${album.album.id}')">Remove</button>
+        `;
+        resultsDiv.appendChild(albumDiv);
+      });
+    }
+
+    async function removeAlbum(albumId) {
+      const response = await fetch(`/remove-album?album_id=${albumId}`, { method: 'DELETE' });
+      if (response.ok) {
+        alert('Album removed successfully');
+        fetchData(); // Refresh the list after removal
+      } else {
+        alert('Failed to remove album');
+      }
+    }
+
+    // Uncomment the line below to automatically fetch data on page load
+    // fetchData();
+  </script>
+</body>
+</html>
